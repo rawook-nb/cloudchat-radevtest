@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/ncloudchat/ncloudchat.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
 
   <body>
@@ -19,7 +19,7 @@
         const token = $("#token").val();
         const serverUrl = $("#serverUrl").val();
         const socketUrl = $("#socketUrl").val();
-        $("#projectID").val(localStorage.getItem("projectID"));
+        $("#projectId").val(localStorage.getItem("projectId"));
         $("#userId").val(localStorage.getItem("userId"));
         $("#name").val(localStorage.getItem("name"));
         $("#token").val(localStorage.getItem("token"));
@@ -27,18 +27,17 @@
         $("#serverUrl").val(localStorage.getItem("serverUrl"));
         $("#socketUrl").val(localStorage.getItem("socketUrl"));
         nc = new ncloudchat.Chat(true);
-        });
-      
-       $("#btnInitialize").on('click', async function () {
+        
+        $("#btnInitialize").on("click", function () {
           const projectId = $("#projectId").val();
           const serverUrl = $("#serverUrl").val();
           const socketUrl = $("#socketUrl").val();
-          localStorage.setItem("projectID", projectId);
+          localStorage.setItem("projectId", projectId);
           localStorage.setItem("serverUrl", serverUrl);
           localStorage.setItem("socketUrl", socketUrl);
           if (!$("#projectId").val()) {
             alert("ProjectId is empty");
-            $("#projectID").focus();
+            $("#projectId").focus();
             return false;
           }
           if (!serverUrl) {
@@ -56,8 +55,67 @@
           console.log("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
          alert("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
        });
+       $("#btnConnect").on("click", async function () {
+          const userId = $("#userId").val();
+          const name = $("#name").val();
+          const profile = $("#profile").val();
+          const customField = $("#customField").val();
+          const token = $("#token").val();
+          localStorage.setItem("userId", userId);
+          localStorage.setItem("name", name);
+          localStorage.setItem("profile", profile);
+          localStorage.setItem("customField", customField);
+          localStorage.setItem("token", token);
+          if (!$("#userId").val()) {
+            alert("UserId is empty");
+            $("#userId").focus();
+            return false;
+          }
+          try {
+            const connection = await nc.connect(
+              {
+                id: userId,
+                name: name,
+                profile: profile,
+                language: "en",
+                customField: customField,
+                token: token
+              }
+            );
+            const output = JSON.stringify(connection);
+            console.log(output);
+            alert(output);
+          } catch (e) {
+            console.log("error : " + e.message);
+            alert("error : " + e.message);
+          }
+       });
+       $("#btnGetUsers").on("click", async function () {
+          const userId = $("#userId").val();
+          localStorage.setItem("userId", userId);
+          if (!$("#userId").val()) {
+            alert("UserId is empty");
+            $("#userId").focus();
+            return false;
+          }
+          try {
+            const filter = { id: userId };
+            const sort = { created_at: -1 };
+            const option = { offset: 0, limit: 100 };
+            const members = await nc.getUsers(filter, sort, option);
+            const output = JSON.stringify(members);
+            console.log(output);
+            alert(output);
+          } catch (e) {
+            console.log("error : " + e.message);
+            alert("error : " + e.message);
+          }
+       });
+      });
+      
+       
                                   
-            async function clickConnect() {
+       async function clickConnect() {
         try {
           await nc.connect({
             id: radevJsSandbox,
@@ -107,8 +165,8 @@
                 <option value="https://soc.ncloudchat.ntruss.com">Real</option>
         </select>
       </div>
-    <button type="button" id="btnInitialize">initialize</button>
-    <button id="btn-connect">Connect</button>
-    <button id="btn-getUsers">getUsers</button>
+    <button id="btnInitialize">initialize</button>
+    <button id="btnConnect">Connect</button>
+    <button id="btnGetUsers">getUsers</button>
   </body>
 </html>
