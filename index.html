@@ -5,26 +5,59 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/ncloudchat/ncloudchat.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   </head>
 
   <body>
     <script>
       let nc = null;
-      nc = new ncloudchat.Chat(true);
-      nc.initialize("fdf90d02-f9f4-4e91-a53f-5d2180025d50");
-      nc.setLang("en");
-      nc.setServerUrl("https://dashboard-api.beta-ncloudchat.naverncp.com");
-      nc.setSocketUrl("https://soc.beta-ncloudchat.ntruss.com");
-      function clickInitialize() {
-        const ncloudchat = require("ncloudchat");
-        const nc = new ncloudchat.Chat();
-        var project_id = "fdf90d02-f9f4-4e91-a53f-5d2180025d50";
-        var region = "beta";
-        var language = "en";
-        nc.initialize(project_id, region, language);
-      }
-
-      async function clickConnect() {
+      $(document).ready(function () {
+        const projectId = $("#projectId").val();
+        const userId = $("#userId").val();
+        const name = $("#name").val();
+        const profile = $("#profile").val();
+        const token = $("#token").val();
+        const serverUrl = $("#serverUrl").val();
+        const socketUrl = $("#socketUrl").val();
+        $("#projectID").val(localStorage.getItem("projectID"));
+        $("#userId").val(localStorage.getItem("userId"));
+        $("#name").val(localStorage.getItem("name"));
+        $("#token").val(localStorage.getItem("token"));
+        $("#profile").val(localStorage.getItem("profile"));
+        $("#serverUrl").val(localStorage.getItem("serverUrl"));
+        $("#socketUrl").val(localStorage.getItem("socketUrl"));
+        nc = new ncloudchat.Chat(true);
+        });
+      
+       $("#btnInitialize").on('click', async function () {
+          const projectId = $("#projectId").val();
+          const serverUrl = $("#serverUrl").val();
+          const socketUrl = $("#socketUrl").val();
+          localStorage.setItem("projectID", projectId);
+          localStorage.setItem("serverUrl", serverUrl);
+          localStorage.setItem("socketUrl", socketUrl);
+          if (!$("#projectId").val()) {
+            alert("ProjectId is empty");
+            $("#projectID").focus();
+            return false;
+          }
+          if (!serverUrl) {
+            alert("server url is empty");
+            return false;
+          }
+          if (!socketUrl) {
+            alert("socket url is empty");
+            return false;
+          }
+          nc.initialize(projectId);
+          nc.setLang("en");
+          nc.setServerUrl(serverUrl);
+          nc.setSocketUrl(socketUrl);
+          console.log("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
+         alert("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
+       });
+                                  
+            async function clickConnect() {
         try {
           await nc.connect({
             id: radevJsSandbox,
@@ -33,6 +66,7 @@
           });
         } catch (e) {
           console.log(e);
+          alert("error: " + e);
         }
       }
 
@@ -46,14 +80,35 @@
           alert("name : " + members.name);
         } catch (e) {
           console.log(e);
+          alert("error: " + e);
         }
       }
-    </script>
 
-    <button id="btn-initialize" onclick="clickInitialize()">
-      initialize()
-    </button>
-    <button id="btn-connect" onclick="clickConnect()">Connect()</button>
-    <button id="btn-getUsers" onclick="clickGetUsers()">getUsers()</button>
+    </script>
+      <div>
+        <input type="text" class="form-control" id="projectId" placeholder="projectId" value="" required="">
+        <input type="text" class="form-control" id="userId" placeholder="userId" value="" required="">
+        <input type="text" class="form-control" id="name" placeholder="name" value="" required="">
+      </div>
+      <div>
+        <input type="text" class="form-control" id="profile" placeholder="profile" value="" required="">
+        <input type="text" class="form-control" id="customField" placeholder="customField" value="">
+        <input type="text" class="form-control" id="token" placeholder="token" value="" required="">
+      </div>
+      <div>
+        <select id="serverUrl" name="serverUrl" class="form-select" aria-label="Default select">
+                <option value="https://dash-api.ncloudchat.com">Alpha</option>
+                <option value="https://dashboard-api.beta-ncloudchat.naverncp.com">Beta</option>
+                <option value="https://ncloudchat.apigw.ntruss.com/gpapps/v1">Real</option>
+        </select>
+        <select id="socketUrl" name="socketUrl" class="form-select" aria-label="Default select">
+                <option value="https://soc.ncloudchat.com">Alpha</option>
+                <option value="https://soc.beta-ncloudchat.ntruss.com">Beta</option>
+                <option value="https://soc.ncloudchat.ntruss.com">Real</option>
+        </select>
+      </div>
+    <button type="button" id="btnInitialize">initialize</button>
+    <button id="btn-connect">Connect</button>
+    <button id="btn-getUsers">getUsers</button>
   </body>
 </html>
