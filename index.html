@@ -1,172 +1,294 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title>JavaScript Sandbox</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/ncloudchat/ncloudchat.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  </head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
 
-  <body>
-    <script>
-      let nc = null;
-      $(document).ready(function () {
-        const projectId = $("#projectId").val();
-        const userId = $("#userId").val();
-        const name = $("#name").val();
-        const profile = $("#profile").val();
-        const token = $("#token").val();
-        const serverUrl = $("#serverUrl").val();
-        const socketUrl = $("#socketUrl").val();
-        $("#projectId").val(localStorage.getItem("projectId"));
-        $("#userId").val(localStorage.getItem("userId"));
-        $("#name").val(localStorage.getItem("name"));
-        $("#token").val(localStorage.getItem("token"));
-        $("#profile").val(localStorage.getItem("profile"));
-        $("#serverUrl").val(localStorage.getItem("serverUrl"));
-        $("#socketUrl").val(localStorage.getItem("socketUrl"));
-        nc = new ncloudchat.Chat(true);
-        
-        $("#btnInitialize").on("click", function () {
-          const projectId = $("#projectId").val();
-          const serverUrl = $("#serverUrl").val();
-          const socketUrl = $("#socketUrl").val();
-          localStorage.setItem("projectId", projectId);
-          localStorage.setItem("serverUrl", serverUrl);
-          localStorage.setItem("socketUrl", socketUrl);
-          if (!$("#projectId").val()) {
-            alert("ProjectId is empty");
-            $("#projectId").focus();
-            return false;
-          }
-          if (!serverUrl) {
-            alert("server url is empty");
-            return false;
-          }
-          if (!socketUrl) {
-            alert("socket url is empty");
-            return false;
-          }
-          nc.initialize(projectId);
-          nc.setLang("en");
-          nc.setServerUrl(serverUrl);
-          nc.setSocketUrl(socketUrl);
-          console.log("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
-         alert("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
-       });
-       $("#btnConnect").on("click", async function () {
-          const userId = $("#userId").val();
-          const name = $("#name").val();
-          const profile = $("#profile").val();
-          const customField = $("#customField").val();
-          const token = $("#token").val();
-          localStorage.setItem("userId", userId);
-          localStorage.setItem("name", name);
-          localStorage.setItem("profile", profile);
-          localStorage.setItem("customField", customField);
-          localStorage.setItem("token", token);
-          if (!$("#userId").val()) {
-            alert("UserId is empty");
-            $("#userId").focus();
-            return false;
-          }
-          try {
-            const connection = await nc.connect(
-              {
-                id: userId,
-                name: name,
-                profile: profile,
-                language: "en",
-                customField: customField,
-                token: token
-              }
-            );
-            const output = JSON.stringify(connection);
-            console.log(output);
-            alert(output);
-          } catch (e) {
-            console.log("error : " + e.message);
-            alert("error : " + e.message);
-          }
-       });
-       $("#btnGetUsers").on("click", async function () {
-          const userId = $("#userId").val();
-          localStorage.setItem("userId", userId);
-          if (!$("#userId").val()) {
-            alert("UserId is empty");
-            $("#userId").focus();
-            return false;
-          }
-          try {
-            const filter = { id: userId };
-            const sort = { created_at: -1 };
-            const option = { offset: 0, limit: 100 };
-            const members = await nc.getUsers(filter, sort, option);
-            const output = JSON.stringify(members);
-            console.log(output);
-            alert(output);
-          } catch (e) {
-            console.log("error : " + e.message);
-            alert("error : " + e.message);
-          }
-       });
-      });
-      
-       
-                                  
-       async function clickConnect() {
-        try {
-          await nc.connect({
-            id: radevJsSandbox,
-            name: radevJsSandbox,
-            language: en,
-          });
-        } catch (e) {
-          console.log(e);
-          alert("error: " + e);
-        }
-      }
+<body>
+    <script>let nc = null;
+        $(document).ready(function () {
+            const projectId = $("#initializeProjectId").val();
+            const userId = $("#loginUserId").val();
+            const name = $("#loginName").val();
+            const profile = $("#loginProfile").val();
+            const token = $("#loginToken").val();
+            const serverUrl = $("#initializeServerUrl").val();
+            const socketUrl = $("#initializeSocketUrl").val();
+            const channelChannelId = $("channelChannelId").val();
+            const messageChannelId = $("messageChannelId").val();
+            $("#initializeProjectId").val(localStorage.getItem("initializeProjectId"));
+            $("#loginUserId").val(localStorage.getItem("loginUserId"));
+            $("#loginName").val(localStorage.getItem("loginName"));
+            $("#loginProfile").val(localStorage.getItem("loginProfile"));
+            $("#loginToken").val(localStorage.getItem("loginToken"));
+            $("#initializeServerUrl").val(localStorage.getItem("initializeServerUrl"));
+            $("#initializeSocketUrl").val(localStorage.getItem("initializeSocketUrl"));
+            $("#channelChannelId").val(localStorage.getItem("channelChannelId"));
+            $("#messageChannelId").val(localStorage.getItem("messageChannelId"));
+            nc = new ncloudchat.Chat(true);
 
-      async function clickGetUsers() {
-        try {
-          const filter = { id: "radevUnityAOS" };
-          const sort = { created_at: -1 };
-          const option = { offset: 0, limit: 100 };
-          const members = await nc.getUsers(filter, sort, option);
-          alert("id : " + members.id);
-          alert("name : " + members.name);
-        } catch (e) {
-          console.log(e);
-          alert("error: " + e);
-        }
-      }
-
-    </script>
-      <div>
-        <input type="text" class="form-control" id="projectId" placeholder="projectId" value="" required="">
-        <input type="text" class="form-control" id="userId" placeholder="userId" value="" required="">
-        <input type="text" class="form-control" id="name" placeholder="name" value="" required="">
-      </div>
-      <div>
-        <input type="text" class="form-control" id="profile" placeholder="profile" value="" required="">
-        <input type="text" class="form-control" id="customField" placeholder="customField" value="">
-        <input type="text" class="form-control" id="token" placeholder="token" value="" required="">
-      </div>
-      <div>
-        <select id="serverUrl" name="serverUrl" class="form-select" aria-label="Default select">
+            $("#btnInitialize").on("click", function () {
+                const projectId = $("#initializeProjectId").val();
+                const serverUrl = $("#initializeServerUrl").val();
+                const socketUrl = $("#initializeSocketUrl").val();
+                localStorage.setItem("initializeProjectId", projectId);
+                localStorage.setItem("initializeServerUrl", serverUrl);
+                localStorage.setItem("initializeSocketUrl", socketUrl);
+                if (!$("#initializeProjectId").val()) {
+                    alert("ProjectId is empty");
+                    $("#initializeProjectId").focus();
+                    return false;
+                }
+                if (!serverUrl) {
+                    alert("server url is empty");
+                    return false;
+                }
+                if (!socketUrl) {
+                    alert("socket url is empty");
+                    return false;
+                }
+                nc.initialize(projectId);
+                nc.setLang("en");
+                nc.setServerUrl(serverUrl);
+                nc.setSocketUrl(socketUrl);
+                console.log("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
+                alert("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
+            });
+            $("#btnConnect").on("click", async function () {
+                const userId = $("#loginUserId").val();
+                const name = $("#loginName").val();
+                const profile = $("#loginProfile").val();
+                const customField = $("#loginCustomField").val();
+                const token = $("#loginToken").val();
+                localStorage.setItem("loginUserId", userId);
+                localStorage.setItem("loginName", name);
+                localStorage.setItem("loginProfile", profile);
+                localStorage.setItem("loginCustomField", customField);
+                localStorage.setItem("loginToken", token);
+                if (!$("#loginUserId").val()) {
+                    alert("UserId is empty");
+                    $("#loginUserId").focus();
+                    return false;
+                }
+                try {
+                    const connection = await nc.connect(
+                        {
+                            id: userId,
+                            name: name,
+                            profile: profile,
+                            language: "en",
+                            customField: customField,
+                            token: token
+                        }
+                    );
+                    const output = JSON.stringify(connection);
+                    console.log(output);
+                    alert(output);
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnGetUsers").on("click", async function () {
+                const userId = $("#loginUserId").val();
+                localStorage.setItem("loginUserId", userId);
+                if (!$("#loginUserId").val()) {
+                    alert("UserId is empty");
+                    $("#loginUserId").focus();
+                    return false;
+                }
+                try {
+                    const filter = { id: userId };
+                    const sort = { created_at: -1 };
+                    const option = { offset: 0, limit: 100 };
+                    const members = await nc.getUsers(filter, sort, option);
+                    const output = JSON.stringify(members);
+                    console.log(output);
+                    alert(output);
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnDisconnect").on("click", async function () {
+                try {
+                    await nc.disconnect();
+                    console.log("disconnect()");
+                    alert("disconnect()");
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnCreateChannel").on("click", async function () {
+                try {
+                    const name = $("#channelName").val();
+                    const type = $("input:radio[name=radioChannelType]:checked").val();
+                    const customField = $("#channelCustomField").val();
+                    if (!$("#channelName").val()) {
+                        alert("name is empty");
+                        $("#channelName").focus();
+                        return false;
+                    }
+                    if (!type) {
+                        alert("type is empty");
+                        return false;
+                    }
+                    const channel = await nc.createChannel({ type, name, customField });
+                    const output = JSON.stringify(channel);
+                    console.log(output);
+                    alert(output);
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnSubscribe").on("click", async function () {
+                try {
+                    const channelId = $("#channelChannelId").val();
+                    await nc.subscribe(channelId, { "language": "en" });
+                    console.log("subscribe(" + channelId + ", {language:en}");
+                    alert("subscribe(" + channelId + ", {language:en}");
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnSubscribe").on("click", async function () {
+                try {
+                    const channelId = $("#channelChannelId").val();
+                    localStorage.setItem("channelChannelId", channelId);
+                    await nc.subscribe(channelId, { "language": "en" });
+                    console.log("subscribe(" + channelId + ", {language:en})");
+                    alert("subscribe(" + channelId + ", {language:en})");
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnUnsubscribe").on("click", async function () {
+                try {
+                    const channelId = $("#channelChannelId").val();
+                    localStorage.setItem("channelChannelId", channelId);
+                    await nc.unsubscribe(channelId);
+                    console.log("unsubscribe(" + channelId + ")");
+                    alert("unsubscribe(" + channelId + ")");
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnSendMessage").on("click", async function () {
+                try {
+                    const channelId = $("#messageChannelId").val();
+                    const message = $("#messageMessage").val();
+                    if (!channelId) {
+                        alert("channelId is empty");
+                        return false;
+                    }
+                    if (!message) {
+                        alert("message is empty");
+                        return false;
+                    }
+                    localStorage.setItem("messageChannelId", channelId);
+                    localStorage.setItem("messageMessage", message);
+                    await nc.sendMessage(channelId,
+                        {
+                            type: "text",
+                            message
+                        }
+                    );
+                    console.log("sendMessage(" + channelId + ", " + message + ")");
+                    alert("sendMessage(" + channelId + ", " + message + ")");
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#messageUploadfile").on("change", async function () {
+                try {
+                    const channelId = $("#messageChannelId").val();
+                    if (!channelId) {
+                        alert("channelId is empty");
+                        return false;
+                    }
+                    localStorage.setItem("messageChannelId", channelId);
+                    var input = this;
+                    const result = await nc.sendImage(channelId, input.files[0]);
+                    const output = JSON.stringify(result);
+                    console.log(output);
+                    alert(output);
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+                $("#messageUploadfile").val("");
+            });
+        });</script>
+    <div>
+        <h3>초기화</h3>
+        <div>
+            <input type="text" id="initializeProjectId" placeholder="projectId" value="" required="">
+        </div>
+        <div>
+            <select id="initializeServerUrl" name="serverUrl" aria-label="Default select">
                 <option value="https://dash-api.ncloudchat.com">Alpha</option>
                 <option value="https://dashboard-api.beta-ncloudchat.naverncp.com">Beta</option>
                 <option value="https://ncloudchat.apigw.ntruss.com/gpapps/v1">Real</option>
-        </select>
-        <select id="socketUrl" name="socketUrl" class="form-select" aria-label="Default select">
+            </select>
+            <select id="initializeSocketUrl" name="socketUrl" aria-label="Default select">
                 <option value="https://soc.ncloudchat.com">Alpha</option>
                 <option value="https://soc.beta-ncloudchat.ntruss.com">Beta</option>
                 <option value="https://soc.ncloudchat.ntruss.com">Real</option>
-        </select>
-      </div>
-    <button id="btnInitialize">initialize</button>
-    <button id="btnConnect">Connect</button>
+            </select>
+        </div>
+        <button id="btnInitialize">initialize</button>
+    </div>
+    <hr />
+    <h3>로그인</h3>
+    <div>
+        <input type="text" id="loginUserId" placeholder="userId" value="" required="">
+        <input type="text" id="loginName" placeholder="name" value="" required="">
+    </div>
+    <div>
+        <input type="text" id="loginProfile" placeholder="profile" value="" required="">
+        <input type="text" id="loginCustomField" placeholder="customField" value="">
+        <input type="text" id="loginToken" placeholder="token" value="" required="">
+    </div>
+    <button id="btnConnect">connect</button>
+    <button id="btnDisconnect">disconnect</button>
     <button id="btnGetUsers">getUsers</button>
-  </body>
+    <hr />
+    <h3>채널</h3>
+    <div>
+        <input type="text" id="channelName" placeholder="name" value="" required="">
+    </div>
+    <div>
+        <input type="radio" name="radioChannelType" id="channelType" value="PRIVATE" />
+        <label for="channelType">PRIVATE</label>
+    </div>
+    <div>
+        <input type="radio" name="radioChannelType" id="channelType" value="PUBLIC" />
+        <label for="channelType">PUBLIC</label>
+    </div>
+    <div>
+        <input type="text" id="channelCustomField" placeholder="customField" value="" required="">
+    </div>
+    <button id="btnCreateChannel">createChannel</button>
+    <div>
+        <input type="text" id="channelChannelId" placeholder="CHANNEL_ID" value="" required="">
+    </div>
+    <button id="btnSubscribe">subscribe</button>
+    <button id="btnUnsubscribe">unsubscribe</button>
+    <hr />
+    <h3>메시지</h3>
+    <input type="text" id="messageChannelId" placeholder="CHANNEL_ID" value="" required="">
+    <input type="text" id="messageMessage" placeholder="message" value="" required="">
+    <button id="btnSendMessage">sendMessage</button>
+    <input type="file" name="file" id="messageUploadfile">
+</body>
 </html>
