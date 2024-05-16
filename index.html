@@ -11,15 +11,6 @@
 <body>
     <script>let nc = null;
         $(document).ready(function () {
-            const projectId = $("#initializeProjectId").val();
-            const userId = $("#loginUserId").val();
-            const name = $("#loginName").val();
-            const profile = $("#loginProfile").val();
-            const token = $("#loginToken").val();
-            const serverUrl = $("#initializeServerUrl").val();
-            const socketUrl = $("#initializeSocketUrl").val();
-            const channelChannelId = $("channelChannelId").val();
-            const messageChannelId = $("messageChannelId").val();
             $("#initializeProjectId").val(localStorage.getItem("initializeProjectId"));
             $("#loginUserId").val(localStorage.getItem("loginUserId"));
             $("#loginName").val(localStorage.getItem("loginName"));
@@ -29,7 +20,49 @@
             $("#initializeSocketUrl").val(localStorage.getItem("initializeSocketUrl"));
             $("#channelChannelId").val(localStorage.getItem("channelChannelId"));
             $("#messageChannelId").val(localStorage.getItem("messageChannelId"));
+            $("#messageMentions").val(localStorage.getItem("messageMentions"));
+            $("#messageParentMessageId").val(localStorage.getItem("messageParentMessageId"));
+            $("#messageMessageId").val(localStorage.getItem("messageMessageId"));
+
             nc = new ncloudchat.Chat(true);
+
+            // Event Handler
+            nc.bind("onMessageReceived", function (channel, message) {
+                const outputMessage = JSON.stringify(message);
+                console.log("**onMessageReceived\n - channel : " + channel + ", message : " + outputMessage);
+            });
+            nc.bind("onMessageDeleted", function (channel, message) {
+                const outputMessage = JSON.stringify(message);
+                console.log("**onMessageDeleted\n - channel : " + channel + ", message : " + outputMessage);
+            });
+            nc.bind("onErrorReceived", function (error) {
+                const outputError = JSON.stringify(error);
+                console.log("**onErrorReceived\n - error : " + outputError);
+            });
+            nc.bind("onConnected", function (socket) {
+                const outputSocket = JSON.stringify(socket);
+                console.log("**onConnected\n - socket : " + outputSocket);
+            });
+            nc.bind("onDisconnected", function (reason) {
+                const outputReason = JSON.stringify(reason);
+                console.log("**onDisconnected\n - reason : " + outputReason);
+            });
+            nc.bind("onStartTyping", function (data) {
+                const outputData = JSON.stringify(data);
+                console.log("**onStartTyping\n - data : " + outputData);
+            });
+            nc.bind("onStopTyping", function (data) {
+                const outputData = JSON.stringify(data);
+                console.log("**onStopTyping\n - data : " + outputData);
+            });
+            nc.bind("onMemberJoined", function (data) {
+                const outputData = JSON.stringify(data);
+                console.log("**onMemberJoined\n - data : " + outputData);
+            });
+            nc.bind("onMemberLeft", function (data) {
+                const outputData = JSON.stringify(data);
+                console.log("**onMemberLeft\n - data : " + outputData);
+            });
 
             $("#btnInitialize").on("click", function () {
                 const projectId = $("#initializeProjectId").val();
@@ -186,6 +219,8 @@
                 try {
                     const channelId = $("#messageChannelId").val();
                     const message = $("#messageMessage").val();
+                    const mentions = $("#messageMentions").val();
+                    const parentMessageId = $("#messageParentMessageId").val();
                     if (!channelId) {
                         alert("channelId is empty");
                         return false;
@@ -196,14 +231,56 @@
                     }
                     localStorage.setItem("messageChannelId", channelId);
                     localStorage.setItem("messageMessage", message);
+                    if (!mentions && !parentMessageId) {
+                        await nc.sendMessage(channelId,
+                            {
+                                type: "text",
+                                message
+                            }
+                        );
+                        console.log("sendMessage(" + channelId + ", " + message + ")");
+                        alert("sendMessage(" + channelId + ", " + message + ")");
+                        return true;
+                    }
+                    if (!parentMessageId) {
+                        localStorage.setItem("messageMentions", mentions);
+                        await nc.sendMessage(channelId,
+                            {
+                                type: "text",
+                                mentions: [mentions],
+                                message
+                            }
+                        );
+                        console.log("sendMessage(" + channelId + ", " + mentions + ", " + message + ")");
+                        alert("sendMessage(" + channelId + ", " + mentions + ", " + message + ")");
+                        return true;
+                    }
+                    if (!mentions) {
+                        localStorage.setItem("messageParentMessageId", parentMessageId);
+                        await nc.sendMessage(channelId,
+                            {
+                                type: "text",
+                                parent_message_id: parentMessageId,
+                                message
+                            }
+                        );
+                        console.log("sendMessage(" + channelId + ", " + parentMessageId + ", " + message + ")");
+                        alert("sendMessage(" + channelId + ", " + parentMessageId + ", " + message + ")");
+                        return true;
+                    }
+                    localStorage.setItem("messageMentions", mentions);
+                    localStorage.setItem("messageParentMessageId", parentMessageId);
                     await nc.sendMessage(channelId,
                         {
                             type: "text",
+                            mentions: [mentions],
+                            parent_message_id: parentMessageId,
                             message
                         }
                     );
-                    console.log("sendMessage(" + channelId + ", " + message + ")");
-                    alert("sendMessage(" + channelId + ", " + message + ")");
+                    console.log("sendMessage(" + channelId + ", " + mentions + ", " + parentMessageId + ", " + message + ")");
+                    alert("sendMessage(" + channelId + ", " + mentions + ", " + parentMessageId + ", " + message + ")");
+                    return true;
                 } catch (e) {
                     console.log("error : " + e.message);
                     alert("error : " + e.message);
@@ -227,6 +304,53 @@
                     alert("error : " + e.message);
                 }
                 $("#messageUploadfile").val("");
+            });
+            $("#btnGetMessage").on("click", async function () {
+                try {
+                    const channel_id = $("#messageChannelId").val();
+                    const message_id = $("#messageMessageId").val();
+                    if (!$("#messageChannelId").val()) {
+                        alert("channelId is empty");
+                        $("#messageChannelId").focus();
+                        return false;
+                    }
+                    if (!$("#messageMessageId").val()) {
+                        alert("messageId is empty");
+                        $("#messageMessageId").focus();
+                        return false;
+                    }
+                    localStorage.setItem("messageChannelId", channel_id);
+                    localStorage.setItem("messageMessageId", message_id);
+                    const message = await nc.getMessage(channel_id, message_id);
+                    const output = JSON.stringify(message);
+                    console.log(output);
+                    alert(output);
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnGetMessages").on("click", async function () {
+                try {
+                    const channel_id = $("#messageChannelId").val();
+                    if (!$("#messageChannelId").val()) {
+                        alert("channelId is empty");
+                        $("#messageChannelId").focus();
+                        return false;
+                    }
+                    const filter = { channel_id: channel_id };
+                    const sort = { sort_id: -1 };
+
+                    //const sort = { created_at: -1 };
+                    const option = { offset: 0, limit: 100 };
+                    const messages = nc.getMessages(filter, sort, option);
+                    const output = JSON.stringify(messages);
+                    console.log(output);
+                    alert(output);
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
             });
         });</script>
     <div>
@@ -286,9 +410,22 @@
     <button id="btnUnsubscribe">unsubscribe</button>
     <hr />
     <h3>메시지</h3>
-    <input type="text" id="messageChannelId" placeholder="CHANNEL_ID" value="" required="">
-    <input type="text" id="messageMessage" placeholder="message" value="" required="">
+    <div>
+        <input type="text" id="messageChannelId" placeholder="CHANNEL_ID" value="" required="">
+        <input type="text" id="messageMessage" placeholder="message" value="" required="">
+    </div>
+    <div>
+        <input type="text" id="messageMentions" placeholder="mentions" value="" required="">
+        <input type="text" id="messageParentMessageId" placeholder="parent_message_id" value="" required="">
+    </div>
     <button id="btnSendMessage">sendMessage</button>
     <input type="file" name="file" id="messageUploadfile">
+    <div>
+        <input type="text" id="messageMessageId" placeholder="message_id" value="" required="">
+    </div>
+    <div>
+        <button id="btnGetMessage">getMessage</button>
+        <button id="btnGetMessages">getMessages</button>
+    </div>
 </body>
 </html>
