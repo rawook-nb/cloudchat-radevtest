@@ -23,6 +23,8 @@
             $("#messageMentions").val(localStorage.getItem("messageMentions"));
             $("#messageParentMessageId").val(localStorage.getItem("messageParentMessageId"));
             $("#messageMessageId").val(localStorage.getItem("messageMessageId"));
+            $("#messageSenderId").val(localStorage.getItem("messageSenderId"));
+            $("#messageSortId").val(localStorage.getItem("messageSortId"));
 
             nc = new ncloudchat.Chat(true);
 
@@ -322,6 +324,12 @@
                     localStorage.setItem("messageChannelId", channel_id);
                     localStorage.setItem("messageMessageId", message_id);
                     const message = await nc.getMessage(channel_id, message_id);
+                    $("#messageSenderId").val(message.sender.id);
+                    $("#messageSortId").val(message.sort.id);
+                    const sender_id = $("#messageSenderId").val();
+                    const sort_id = $("#messageSortId").val();
+                    localStorage.setItem("messageSenderId", sender_id);
+                    localStorage.setItem("messageSortId", sort_id);
                     const output = JSON.stringify(message);
                     console.log(output);
                     alert(output);
@@ -339,9 +347,29 @@
                         return false;
                     }
                     const filter = { channel_id: channel_id };
-                    const sort = { sort_id: -1 };
-
-                    //const sort = { created_at: -1 };
+                    const sort = { created_at: -1 };
+                    const option = { offset: 0, limit: 5 };
+                    const messages = await nc.getMessages(filter, sort, option);
+                    const output = JSON.stringify(messages);
+                    console.log(output);
+                    alert(output);
+                } catch (e) {
+                    console.log("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnMarkRead").on("click", async function () {
+                try {
+                    const channel_id = $("#messageChannelId").val();
+                    //const channel_id = $("#messageChannelId").val();
+                    //const channel_id = $("#messageChannelId").val();
+                    if (!$("#messageChannelId").val()) {
+                        alert("channelId is empty");
+                        $("#messageChannelId").focus();
+                        return false;
+                    }
+                    const filter = { channel_id: channel_id };
+                    const sort = { created_at: -1 };
                     const option = { offset: 0, limit: 100 };
                     const messages = nc.getMessages(filter, sort, option);
                     const output = JSON.stringify(messages);
@@ -422,10 +450,13 @@
     <input type="file" name="file" id="messageUploadfile">
     <div>
         <input type="text" id="messageMessageId" placeholder="message_id" value="" required="">
+        <input type="text" id="messageSenderId" placeholder="message.sender.id" value="" required="">
+        <input type="text" id="messageSortId" placeholder="message.sort.id" value="" required="">
     </div>
     <div>
         <button id="btnGetMessage">getMessage</button>
         <button id="btnGetMessages">getMessages</button>
+        <button id="btnMarkRead">markRead</button>
     </div>
 </body>
 </html>
