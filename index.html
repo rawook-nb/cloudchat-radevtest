@@ -373,12 +373,12 @@
                     const option = { offset: 0, limit: 100 };
                     const messages = await nc.getMessages(filter, sort, option);
                     inAppLog("messageTotalCount : " + messages.totalCount);
-                    console.log("messageTotalCount : " + messages.totalCount);
+                    //console.log("messageTotalCount : " + messages.totalCount);
                     messages.edges.forEach((message, i) => {
-                    const output = JSON.stringify(message);
-                    inAppLog("message[" + i + "] : " + output);
-                    console.log("message[" + i + "] : " + output);
-                  })
+                      const output = JSON.stringify(message);
+                      inAppLog("message[" + i + "] : " + output);
+                      //console.log("message[" + i + "] : " + output);
+                    })
                 } catch (e) {
                     inAppLog("error : " + e.message);
                     alert("error : " + e.message);
