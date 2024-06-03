@@ -9,7 +9,27 @@
 </head>
 
 <body>
-    <script>let nc = null;
+    <script>function scrollToBottom() {
+            const scrollContainer = document.getElementById("logMessages");
+            scrollContainer.scrollTo({
+                top: scrollContainer.scrollHeight,
+                left: 0,
+                behavior: "smooth",
+            });
+        }
+        function inAppLog(message) {
+            if (typeof message == "object") {
+                $("#logMessages").append("<pre>" + JSON.stringify(message, null, 1) + "</pre>");
+                const output = JSON.stringify(message);
+                console.log(output);
+            }
+            else {
+                $("#logMessages").append(message + "<br>");
+                console.log(message);
+            }
+        }
+
+        let nc = null;
         $(document).ready(function () {
             $("#initializeProjectId").val(localStorage.getItem("initializeProjectId"));
             $("#loginUserId").val(localStorage.getItem("loginUserId"));
@@ -31,39 +51,39 @@
             // Event Handler
             nc.bind("onMessageReceived", function (channel, message) {
                 const outputMessage = JSON.stringify(message);
-                console.log("**onMessageReceived\n - channel : " + channel + ", message : " + outputMessage);
+                inAppLog("**onMessageReceived\n - channel : " + channel + ", message : " + outputMessage);
             });
             nc.bind("onMessageDeleted", function (channel, message) {
                 const outputMessage = JSON.stringify(message);
-                console.log("**onMessageDeleted\n - channel : " + channel + ", message : " + outputMessage);
+                inAppLog("**onMessageDeleted\n - channel : " + channel + ", message : " + outputMessage);
             });
             nc.bind("onErrorReceived", function (error) {
                 const outputError = JSON.stringify(error);
-                console.log("**onErrorReceived\n - error : " + outputError);
+                inAppLog("**onErrorReceived\n - error : " + outputError);
             });
             nc.bind("onConnected", function (socket) {
                 const outputSocket = JSON.stringify(socket);
-                console.log("**onConnected\n - socket : " + outputSocket);
+                inAppLog("**onConnected\n - socket : " + outputSocket);
             });
             nc.bind("onDisconnected", function (reason) {
                 const outputReason = JSON.stringify(reason);
-                console.log("**onDisconnected\n - reason : " + outputReason);
+                inAppLog("**onDisconnected\n - reason : " + outputReason);
             });
             nc.bind("onStartTyping", function (data) {
                 const outputData = JSON.stringify(data);
-                console.log("**onStartTyping\n - data : " + outputData);
+                inAppLog("**onStartTyping\n - data : " + outputData);
             });
             nc.bind("onStopTyping", function (data) {
                 const outputData = JSON.stringify(data);
-                console.log("**onStopTyping\n - data : " + outputData);
+                inAppLog("**onStopTyping\n - data : " + outputData);
             });
             nc.bind("onMemberJoined", function (data) {
                 const outputData = JSON.stringify(data);
-                console.log("**onMemberJoined\n - data : " + outputData);
+                inAppLog("**onMemberJoined\n - data : " + outputData);
             });
             nc.bind("onMemberLeft", function (data) {
                 const outputData = JSON.stringify(data);
-                console.log("**onMemberLeft\n - data : " + outputData);
+                inAppLog("**onMemberLeft\n - data : " + outputData);
             });
 
             $("#btnInitialize").on("click", function () {
@@ -75,23 +95,25 @@
                 localStorage.setItem("initializeSocketUrl", socketUrl);
                 if (!$("#initializeProjectId").val()) {
                     alert("ProjectId is empty");
+                  inAppLog("ProjectId is empty");
                     $("#initializeProjectId").focus();
                     return false;
                 }
                 if (!serverUrl) {
                     alert("server url is empty");
+                  inAppLog("server url is empty");
                     return false;
                 }
                 if (!socketUrl) {
                     alert("socket url is empty");
+                    inAppLog("socket url is empty");
                     return false;
                 }
                 nc.initialize(projectId);
                 nc.setLang("en");
                 nc.setServerUrl(serverUrl);
                 nc.setSocketUrl(socketUrl);
-                console.log("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
-                alert("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
+                inAppLog("initialize(" + projectId + ", " + serverUrl + ", " + socketUrl + ")");
             });
             $("#btnConnect").on("click", async function () {
                 const userId = $("#loginUserId").val();
@@ -106,6 +128,7 @@
                 localStorage.setItem("loginToken", token);
                 if (!$("#loginUserId").val()) {
                     alert("UserId is empty");
+                    inAppLog("UserId is empty");
                     $("#loginUserId").focus();
                     return false;
                 }
@@ -120,11 +143,9 @@
                             token: token
                         }
                     );
-                    const output = JSON.stringify(connection);
-                    console.log(output);
-                    alert(output);
+                    inAppLog(connection);
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -133,6 +154,7 @@
                 localStorage.setItem("loginUserId", userId);
                 if (!$("#loginUserId").val()) {
                     alert("UserId is empty");
+                    inAppLog("UserId is empty");
                     $("#loginUserId").focus();
                     return false;
                 }
@@ -145,7 +167,7 @@
                     console.log(output);
                     alert(output);
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -155,7 +177,7 @@
                     console.log("disconnect()");
                     alert("disconnect()");
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -178,7 +200,7 @@
                     console.log(output);
                     alert(output);
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -189,7 +211,7 @@
                     console.log("subscribe(" + channelId + ", {language:en}");
                     alert("subscribe(" + channelId + ", {language:en}");
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -201,7 +223,7 @@
                     console.log("subscribe(" + channelId + ", {language:en})");
                     alert("subscribe(" + channelId + ", {language:en})");
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -213,7 +235,7 @@
                     console.log("unsubscribe(" + channelId + ")");
                     alert("unsubscribe(" + channelId + ")");
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -237,7 +259,7 @@
                         await nc.sendMessage(channelId,
                             {
                                 type: "text",
-                                message
+                                message: message
                             }
                         );
                         console.log("sendMessage(" + channelId + ", " + message + ")");
@@ -250,7 +272,7 @@
                             {
                                 type: "text",
                                 mentions: [mentions],
-                                message
+                                message: message
                             }
                         );
                         console.log("sendMessage(" + channelId + ", " + mentions + ", " + message + ")");
@@ -263,7 +285,7 @@
                             {
                                 type: "text",
                                 parent_message_id: parentMessageId,
-                                message
+                                message: message
                             }
                         );
                         console.log("sendMessage(" + channelId + ", " + parentMessageId + ", " + message + ")");
@@ -277,14 +299,14 @@
                             type: "text",
                             mentions: [mentions],
                             parent_message_id: parentMessageId,
-                            message
+                            message: message
                         }
                     );
                     console.log("sendMessage(" + channelId + ", " + mentions + ", " + parentMessageId + ", " + message + ")");
                     alert("sendMessage(" + channelId + ", " + mentions + ", " + parentMessageId + ", " + message + ")");
                     return true;
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -302,7 +324,7 @@
                     console.log(output);
                     alert(output);
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
                 $("#messageUploadfile").val("");
@@ -334,7 +356,7 @@
                     console.log(output);
                     alert(output);
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -348,13 +370,13 @@
                     }
                     const filter = { channel_id: channel_id };
                     const sort = { created_at: -1 };
-                    const option = { offset: 0, limit: 5 };
+                    const option = { offset: 0, limit: 100 };
                     const messages = await nc.getMessages(filter, sort, option);
                     const output = JSON.stringify(messages);
                     console.log(output);
                     alert(output);
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
@@ -376,10 +398,13 @@
                     console.log(output);
                     alert(output);
                 } catch (e) {
-                    console.log("error : " + e.message);
+                    inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
+                  $("#btnLogClear").on("click", async function () {
+          $("#logMessages").html("");
+        });
         });</script>
     <div>
         <h3>초기화</h3>
@@ -457,6 +482,11 @@
         <button id="btnGetMessage">getMessage</button>
         <button id="btnGetMessages">getMessages</button>
         <button id="btnMarkRead">markRead</button>
+        <hr />
+    </div>
+    <div id="logMessages" class="messages" style="overflow-y: auto; height: 300px; background-color: #ebebeb"></div>
+  
+        <button id="btnLogClear">logClear</button>
     </div>
 </body>
 </html>
