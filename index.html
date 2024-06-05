@@ -95,13 +95,13 @@
                 localStorage.setItem("initializeSocketUrl", socketUrl);
                 if (!$("#initializeProjectId").val()) {
                     alert("ProjectId is empty");
-                  inAppLog("ProjectId is empty");
+                    inAppLog("ProjectId is empty");
                     $("#initializeProjectId").focus();
                     return false;
                 }
                 if (!serverUrl) {
                     alert("server url is empty");
-                  inAppLog("server url is empty");
+                    inAppLog("server url is empty");
                     return false;
                 }
                 if (!socketUrl) {
@@ -161,7 +161,7 @@
                 try {
                     const filter = { id: userId };
                     const sort = { created_at: -1 };
-                    const option = { offset: 0, limit: 100 };
+                    const option = { offset: 0, per_page: 100 };
                     const members = await nc.getUsers(filter, sort, option);
                     const output = JSON.stringify(members);
                     console.log(output);
@@ -204,13 +204,65 @@
                     alert("error : " + e.message);
                 }
             });
-            $("#btnSubscribe").on("click", async function () {
+            $("#btnGetChannels").on("click", async function () {
                 try {
-                    const channelId = $("#channelChannelId").val();
-                    await nc.subscribe(channelId, { "language": "en" });
-                    console.log("subscribe(" + channelId + ", {language:en}");
-                    alert("subscribe(" + channelId + ", {language:en}");
+                    const filter = { state: true };
+                    const sort = { created_at: -1 };
+                    const option = { offset: 0, per_page: 100 };
+                    const channels = await nc.getChannels(filter, sort, option);
+                    inAppLog("channelTotalCount : " + channels.totalCount);
+                    channels.edges.forEach((channel, i) => {
+                        const output = JSON.stringify(channel);
+                        inAppLog("channel[" + i + "] : " + output);
+                    });
                 } catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnGetUserIdSubscriptions").on("click", async function () {
+                try {
+                    const userId = $("#loginUserId").val();
+                    const filter = { user_id: userId };
+                    const sort = { created_at: -1 };
+                    const option = { offset: 0, per_page: 100 };
+                    const subscriptions = await nc.getSubscriptions(filter, sort, option);
+                    if (subscriptions.edges.length > 0) {
+                        subscriptions.edges.forEach((subscription, i) => {
+                            const output = JSON.stringify(subscription);
+                            inAppLog("subscription[" + i + "] : " + output);
+                        });
+                    }
+                    else {
+                        inAppLog("No subscribe Channel");
+                        alert("No subscribe Channel");
+                    }
+                }
+                catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnGetUnReadSubscriptions").on("click", async function () {
+                try {
+                    const userId = $("#loginUserId").val();
+                    const filter = { user_id: userId };
+                    const sort = { created_at: -1 };
+                    const option = { offset: 0, per_page: 100 };
+                    const subscriptions = await nc.getSubscriptions(filter, sort, option);
+                    const filteredNodes = subscriptions.edges.filter(subscription => subscription.node.mark.unread != null)
+                    if (filteredNodes.length > 0) {
+                        filteredNodes.forEach((subscription, i) => {
+                            const output = JSON.stringify(subscription);
+                            inAppLog("subscription[" + i + "] : " + output);
+                        });
+                    }
+                    else {
+                        inAppLog("No unread Channel");
+                        alert("No unread Channel");
+                    }
+                }
+                catch (e) {
                     inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
@@ -218,10 +270,9 @@
             $("#btnSubscribe").on("click", async function () {
                 try {
                     const channelId = $("#channelChannelId").val();
-                    localStorage.setItem("channelChannelId", channelId);
                     await nc.subscribe(channelId, { "language": "en" });
-                    console.log("subscribe(" + channelId + ", {language:en})");
-                    alert("subscribe(" + channelId + ", {language:en})");
+                    console.log("subscribe(" + channelId + ", {language:en}");
+                    alert("subscribe(" + channelId + ", {language:en}");
                 } catch (e) {
                     inAppLog("error : " + e.message);
                     alert("error : " + e.message);
@@ -368,17 +419,18 @@
                         $("#messageChannelId").focus();
                         return false;
                     }
+                    localStorage.setItem("messageChannelId", channel_id);
                     const filter = { channel_id: channel_id };
                     const sort = { created_at: -1 };
-                    const option = { offset: 0, limit: 100 };
+                    const option = { offset: 0, per_page: 100 };
                     const messages = await nc.getMessages(filter, sort, option);
                     inAppLog("messageTotalCount : " + messages.totalCount);
                     //console.log("messageTotalCount : " + messages.totalCount);
                     messages.edges.forEach((message, i) => {
-                      const output = JSON.stringify(message);
-                      inAppLog("message[" + i + "] : " + output);
-                      //console.log("message[" + i + "] : " + output);
-                    })
+                        const output = JSON.stringify(message);
+                        inAppLog("message[" + i + "] : " + output);
+                        //console.log("message[" + i + "] : " + output);
+                    });
                 } catch (e) {
                     inAppLog("error : " + e.message);
                     alert("error : " + e.message);
@@ -386,9 +438,15 @@
             });
             $("#btnMarkRead").on("click", async function () {
                 try {
+                    alert("WIP");
+                } catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnAutoMarkRead").on("click", async function () {
+                try {
                     const channel_id = $("#messageChannelId").val();
-                    //const channel_id = $("#messageChannelId").val();
-                    //const channel_id = $("#messageChannelId").val();
                     if (!$("#messageChannelId").val()) {
                         alert("channelId is empty");
                         $("#messageChannelId").focus();
@@ -396,19 +454,22 @@
                     }
                     const filter = { channel_id: channel_id };
                     const sort = { created_at: -1 };
-                    const option = { offset: 0, limit: 100 };
-                    const messages = nc.getMessages(filter, sort, option);
-                    const output = JSON.stringify(messages);
-                    console.log(output);
-                    alert(output);
+                    const option = { offset: 0, per_page: 1 };
+                    const messages = await nc.getMessages(filter, sort, option);
+                    nc.markRead(channel_id, {
+                        user_id: messages.edges[0].node.sender.id,
+                        message_id: messages.edges[0].node.message_id,
+                        sort_id: messages.edges[0].node.sort_id
+                    });
+                    inAppLog("marked message : " + JSON.stringify(messages.edges[0].node));
                 } catch (e) {
                     inAppLog("error : " + e.message);
                     alert("error : " + e.message);
                 }
             });
-                  $("#btnLogClear").on("click", async function () {
-          $("#logMessages").html("");
-        });
+            $("#btnLogClear").on("click", async function () {
+                $("#logMessages").html("");
+            });
         });</script>
     <div>
         <h3>초기화</h3>
@@ -460,6 +521,9 @@
         <input type="text" id="channelCustomField" placeholder="customField" value="" required="">
     </div>
     <button id="btnCreateChannel">createChannel</button>
+    <button id="btnGetChannels">getChannels</button>
+    <button id="btnGetUserIdSubscriptions">getSubscriptions (UserId)</button>
+    <button id="btnGetUnReadSubscriptions">getSubscriptions (Unread)</button>
     <div>
         <input type="text" id="channelChannelId" placeholder="CHANNEL_ID" value="" required="">
     </div>
@@ -486,11 +550,12 @@
         <button id="btnGetMessage">getMessage</button>
         <button id="btnGetMessages">getMessages</button>
         <button id="btnMarkRead">markRead</button>
+        <button id="btnAutoMarkRead">markRead (auto)</button>
         <hr />
     </div>
     <div id="logMessages" class="messages" style="overflow-y: auto; height: 300px; background-color: #ebebeb"></div>
-  
-        <button id="btnLogClear">logClear</button>
+
+    <button id="btnLogClear">logClear</button>
     </div>
 </body>
 </html>
