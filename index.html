@@ -502,7 +502,8 @@
             $("#btnCountUnread").on("click", async function () {
                 try {
                     const channel_id = $("#messageChannelId").val();
-                    const unread = await nc.countUnread(channel_id);
+                    //const unread = await nc.countUnread(channel_id);
+                    const unread = await nc.unreadCount(channel_id);
                     inAppLog("unreadMark : " + JSON.stringify(unread));
                 } catch (e) {
                     inAppLog("error : " + e.message);
