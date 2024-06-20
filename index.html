@@ -223,7 +223,8 @@
             $("#btnGetUserIdSubscriptions").on("click", async function () {
                 try {
                     const userId = $("#loginUserId").val();
-                    const filter = { user_id: userId };
+                    const filter = { user_id: userId, channel_id: "97caed03-0a8b-4f2b-ba61-fdd4086520a8" };
+                    //const filter = { user_id: userId };
                     const sort = { created_at: -1 };
                     const option = { offset: 0, per_page: 100 };
                     const subscriptions = await nc.getSubscriptions(filter, sort, option);
@@ -370,7 +371,8 @@
                     }
                     localStorage.setItem("messageChannelId", channelId);
                     var input = this;
-                    const result = await nc.sendImage(channelId, input.files[0]);
+                    //const result = await nc.sendImage(channelId, input.files[0]);
+                    const result = await nc.sendFile(channelId, input.files[0]);
                     const output = JSON.stringify(result);
                     console.log(output);
                     alert(output);
@@ -467,6 +469,27 @@
                     alert("error : " + e.message);
                 }
             });
+            $("#btnDeleteMessage").on("click", async function () {
+                try {
+                    const channel_id = $("#messageChannelId").val();
+                    const message_id = $("#messageMessageId").val();
+                    await nc.deleteMessage(channel_id, message_id);
+                    inAppLog("deleteMessage(" + channel_id + ", " + message_id + ")")
+                } catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnCountUnread").on("click", async function () {
+                try {
+                    const channel_id = $("#messageChannelId").val();
+                    const unread = await nc.countUnread(channel_id);
+                    inAppLog("unreadMark : " + JSON.stringify(unread));
+                } catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
             $("#btnLogClear").on("click", async function () {
                 $("#logMessages").html("");
             });
@@ -551,6 +574,8 @@
         <button id="btnGetMessages">getMessages</button>
         <button id="btnMarkRead">markRead</button>
         <button id="btnAutoMarkRead">markRead (auto)</button>
+        <button id="btnDeleteMessage">deleteMessage</button>
+        <button id="btnCountUnread">countUnread</button>
         <hr />
     </div>
     <div id="logMessages" class="messages" style="overflow-y: auto; height: 300px; background-color: #ebebeb"></div>
