@@ -4,7 +4,8 @@
     <title>JavaScript Sandbox</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://unpkg.com/ncloudchat/ncloudchat.min.js"></script>
+    <script src="https://unpkg.com/ncloudchat@1.0.47/ncloudchat.min.js"></script>
+    <!--<script src="https://unpkg.com/ncloudchat/ncloudchat.min.js"></script>-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
@@ -166,6 +167,24 @@
                     const output = JSON.stringify(members);
                     console.log(output);
                     alert(output);
+                } catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnSetPushStateTrue").on("click", async function () {
+                try {
+                    await nc.setPushState(true, true, true);
+                    inAppLog("setPushState(true, true, true)");
+                } catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnSetPushStateFalse").on("click", async function () {
+                try {
+                    await nc.setPushState(false, true, true);
+                    inAppLog("setPushState(false, true, true)");
                 } catch (e) {
                     inAppLog("error : " + e.message);
                     alert("error : " + e.message);
@@ -527,6 +546,8 @@
     <button id="btnConnect">connect</button>
     <button id="btnDisconnect">disconnect</button>
     <button id="btnGetUsers">getUsers</button>
+    <button id="btnSetPushStateTrue">setPushState (true)</button>
+    <button id="btnSetPushStateFalse">setPushState (false)</button>
     <hr />
     <h3>채널</h3>
     <div>
