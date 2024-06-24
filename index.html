@@ -4,7 +4,7 @@
     <title>JavaScript Sandbox</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://unpkg.com/ncloudchat@1.0.47/ncloudchat.min.js"></script>
+    <script src="https://unpkg.com/ncloudchat@1.0.47-beta1/ncloudchat.min.js"></script>
     <!--<script src="https://unpkg.com/ncloudchat/ncloudchat.min.js"></script>-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
@@ -242,7 +242,9 @@
             $("#btnGetUserIdSubscriptions").on("click", async function () {
                 try {
                     const userId = $("#loginUserId").val();
-                    const filter = { user_id: userId, channel_id: "97caed03-0a8b-4f2b-ba61-fdd4086520a8" };
+                    const channelId = $("#channelChannelId").val();
+                    localStorage.setItem("channelChannelId", channelId);
+                    const filter = { user_id: userId, channel_id: channelId };
                     //const filter = { user_id: userId };
                     const sort = { created_at: -1 };
                     const option = { offset: 0, per_page: 100 };
