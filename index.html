@@ -4,7 +4,7 @@
     <title>JavaScript Sandbox</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://unpkg.com/ncloudchat@1.0.47-beta1/ncloudchat.min.js"></script>
+    <script src="https://unpkg.com/ncloudchat@1.0.49-beta2/ncloudchat.min.js"></script>
     <!--<script src="https://unpkg.com/ncloudchat/ncloudchat.min.js"></script>-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
@@ -392,6 +392,7 @@
                     }
                     localStorage.setItem("messageChannelId", channelId);
                     var input = this;
+                    inAppLog("input : " + JSON.stringify(input));
                     //const result = await nc.sendImage(channelId, input.files[0]);
                     const result = await nc.sendFile(channelId, input.files[0]);
                     const output = JSON.stringify(result);
@@ -501,12 +502,23 @@
                     alert("error : " + e.message);
                 }
             });
-            $("#btnCountUnread").on("click", async function () {
+            $("#btnUnreadCount").on("click", async function () {
                 try {
                     const channel_id = $("#messageChannelId").val();
                     //const unread = await nc.countUnread(channel_id);
                     const unread = await nc.unreadCount(channel_id);
                     inAppLog("unreadMark : " + JSON.stringify(unread));
+                } catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
+            $("#btnGetMessageReadCount").on("click", async function () {
+                try {
+                    const channel_id = $("#messageChannelId").val();
+                    const message_id = $("#messageMessageId").val();
+                  const result = await nc.getMessageUnreadCount(channel_id, message_id);
+                    inAppLog("getMessageReadCount : " + JSON.stringify(result));
                 } catch (e) {
                     inAppLog("error : " + e.message);
                     alert("error : " + e.message);
@@ -599,7 +611,8 @@
         <button id="btnMarkRead">markRead</button>
         <button id="btnAutoMarkRead">markRead (auto)</button>
         <button id="btnDeleteMessage">deleteMessage</button>
-        <button id="btnCountUnread">countUnread</button>
+        <button id="btnUnreadCount">unreadCount</button>
+        <button id="btnGetMessageReadCount">getMessageReadCount</button>
         <hr />
     </div>
     <div id="logMessages" class="messages" style="overflow-y: auto; height: 300px; background-color: #ebebeb"></div>
