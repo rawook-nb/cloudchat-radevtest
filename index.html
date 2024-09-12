@@ -312,6 +312,20 @@
                     alert("error : " + e.message);
                 }
             });
+            $("#btnBanUser").on("click", async function () {
+                try {
+                    const channelId = $("#channelChannelId").val();
+                    localStorage.setItem("channelChannelId", channelId);
+                    const userId = $("#channelUserId").val();
+                    localStorage.setItem("channelUserId", userId);
+                    await nc.banUser(channelId, userId);
+                    console.log("banUser(" + channelId + ", " + userId + ")");
+                    alert("banUser(" + channelId + ", " + userId + ")");
+                } catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
             $("#btnSendMessage").on("click", async function () {
                 try {
                     const channelId = $("#messageChannelId").val();
@@ -588,6 +602,10 @@
     </div>
     <button id="btnSubscribe">subscribe</button>
     <button id="btnUnsubscribe">unsubscribe</button>
+    <div>
+        <input type="text" id="channelUserId" placeholder="USER_ID" value="" required="">
+    </div>
+    <button id="btnBanUser">banUser</button>
     <hr />
     <h3>메시지</h3>
     <div>
