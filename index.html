@@ -4,7 +4,7 @@
     <title>JavaScript Sandbox</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://unpkg.com/ncloudchat@1.0.49-beta2/ncloudchat.min.js"></script>
+    <script src="https://unpkg.com/ncloudchat@1.0.49-beta3/ncloudchat.min.js"></script>
     <!--<script src="https://unpkg.com/ncloudchat/ncloudchat.min.js"></script>-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
@@ -52,11 +52,11 @@
             // Event Handler
             nc.bind("onMessageReceived", function (channel, message) {
                 const outputMessage = JSON.stringify(message);
-                inAppLog("**onMessageReceived\n - channel : " + channel + ", message : " + outputMessage);
+                inAppLog("**onMessageReceived\n - channel : " + channel + ",\n - message : " + outputMessage);
             });
             nc.bind("onMessageDeleted", function (channel, message) {
                 const outputMessage = JSON.stringify(message);
-                inAppLog("**onMessageDeleted\n - channel : " + channel + ", message : " + outputMessage);
+                inAppLog("**onMessageDeleted\n - channel : " + channel + ",\n - message : " + outputMessage);
             });
             nc.bind("onErrorReceived", function (error) {
                 const outputError = JSON.stringify(error);
@@ -85,6 +85,10 @@
             nc.bind("onMemberLeft", function (data) {
                 const outputData = JSON.stringify(data);
                 inAppLog("**onMemberLeft\n - data : " + outputData);
+            });
+            nc.bind("onSubscriptionUpdated", function (channelId, data) {
+                const outputData = JSON.stringify(data);
+                inAppLog("**onSubscriptionUpdated\n - channelId : " + channelId + ",\n - data : " + outputData);
             });
 
             $("#btnInitialize").on("click", function () {
@@ -307,20 +311,6 @@
                     await nc.unsubscribe(channelId);
                     console.log("unsubscribe(" + channelId + ")");
                     alert("unsubscribe(" + channelId + ")");
-                } catch (e) {
-                    inAppLog("error : " + e.message);
-                    alert("error : " + e.message);
-                }
-            });
-            $("#btnBanUser").on("click", async function () {
-                try {
-                    const channelId = $("#channelChannelId").val();
-                    localStorage.setItem("channelChannelId", channelId);
-                    const userId = $("#channelUserId").val();
-                    localStorage.setItem("channelUserId", userId);
-                    await nc.banUser(channelId, userId);
-                    console.log("banUser(" + channelId + ", " + userId + ")");
-                    alert("banUser(" + channelId + ", " + userId + ")");
                 } catch (e) {
                     inAppLog("error : " + e.message);
                     alert("error : " + e.message);
@@ -602,10 +592,6 @@
     </div>
     <button id="btnSubscribe">subscribe</button>
     <button id="btnUnsubscribe">unsubscribe</button>
-    <div>
-        <input type="text" id="channelUserId" placeholder="USER_ID" value="" required="">
-    </div>
-    <button id="btnBanUser">banUser</button>
     <hr />
     <h3>메시지</h3>
     <div>
