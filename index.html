@@ -40,6 +40,7 @@
             $("#initializeServerUrl").val(localStorage.getItem("initializeServerUrl"));
             $("#initializeSocketUrl").val(localStorage.getItem("initializeSocketUrl"));
             $("#channelChannelId").val(localStorage.getItem("channelChannelId"));
+            $("#channelchannelUserId").val(localStorage.getItem("channelchannelUserId"));
             $("#messageChannelId").val(localStorage.getItem("messageChannelId"));
             $("#messageMentions").val(localStorage.getItem("messageMentions"));
             $("#messageParentMessageId").val(localStorage.getItem("messageParentMessageId"));
@@ -89,6 +90,7 @@
             nc.bind("onSubscriptionUpdated", function (channelId, data) {
                 const outputData = JSON.stringify(data);
                 inAppLog("**onSubscriptionUpdated\n - channelId : " + channelId + ",\n - data : " + outputData);
+                inAppLog("- data.mark.user_id : " + data.mark.user_id + ",\n - data.mark.message_id : " + data.mark.message_id + ",\n - data.mark.sort_id : " + data.mark.sort_id);
             });
 
             $("#btnInitialize").on("click", function () {
@@ -316,6 +318,26 @@
                     alert("error : " + e.message);
                 }
             });
+            $("#btnBanUser").on("click", async function () {
+                try {
+                    const channelId = $("#channelChannelId").val();
+                    const userId = $("#channelUserId").val();
+                    const timeout = $("#channelTimeout").val();
+                    const reason = $("#channelReason").val();
+                    localStorage.setItem("channelChannelId", channelId);
+                    localStorage.setItem("channelUserId", userId);
+                  
+                    await nc.banUser(channelId, userId, {
+                      timeout: timeout,
+                      reason: reason
+                    });
+                    console.log("banUser(" + channelId + ", " + userId + ", " + timeout + ", " + reason + ")");
+                    alert("banUser(" + channelId + ", " + userId + ", " + timeout + ", " + reason + ")");
+                } catch (e) {
+                    inAppLog("error : " + e.message);
+                    alert("error : " + e.message);
+                }
+            });
             $("#btnSendMessage").on("click", async function () {
                 try {
                     const channelId = $("#messageChannelId").val();
@@ -466,7 +488,16 @@
             });
             $("#btnMarkRead").on("click", async function () {
                 try {
-                    alert("WIP");
+                    const channel_id = $("#messageChannelId").val();
+                    const user_id = $("#messageSenderId").val();
+                    const message_id = $("#messageMessageId").val();
+                    const sort_id = $("#messageSortId").val();
+                    nc.markRead(channel_id, {
+                        user_id: user_id,
+                        message_id: message_id,
+                        sort_id: sort_id
+                    });
+                    inAppLog("marked message\n - channelId : " + channelId + ",\n - user_id : " + user_id + ",\n - message_id : " + message_id + ",\n - sort_id : " + sort_id);
                 } catch (e) {
                     inAppLog("error : " + e.message);
                     alert("error : " + e.message);
@@ -592,6 +623,12 @@
     </div>
     <button id="btnSubscribe">subscribe</button>
     <button id="btnUnsubscribe">unsubscribe</button>
+    <div>
+        <input type="text" id="channelUserId" placeholder="USER_ID" value="" required="">
+        <input type="text" id="channelTimeout" placeholder="timeout" value="" required="">
+        <input type="text" id="channelReason" placeholder="reason" value="" required="">
+    </div>
+    <button id="btnBanUser">banUser</button>
     <hr />
     <h3>메시지</h3>
     <div>
