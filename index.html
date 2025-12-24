@@ -664,21 +664,42 @@
     <!-- Simple AI Chat UI -->
     <div id="aiChat" style="border:1px solid #d0d0d0; padding:12px; margin-top:12px; max-width:720px; background:#fafafa;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <h3 style="margin:0;">AI Chat-v0.0.1</h3>
+            <h3 style="margin:0;">AI Chat-v0.0.2</h3>
             <button id="newChat" style="font-size:12px; padding:4px 8px;">New Chat</button>
         </div>
+        
+        <!-- API Key Configuration for Testing -->
+        <div style="margin-bottom:12px; padding:8px; background:#fff; border:1px dashed #ccc; font-size:12px;">
+            <label>Telnyx API Key:</label>
+            <input type="password" id="telnyxApiKeyInput" placeholder="Enter API Key" style="width:200px; padding:2px 4px;" />
+            <button id="saveApiKey" style="padding:2px 6px;">Save to Local</button>
+            <div style="color:#999; margin-top:4px;">* 브라우저 LocalStorage에 저장되어 소스코드에 노출되지 않습니다.</div>
+        </div>
+
         <div id="chatMessages" style="border:1px solid #e0e0e0; background:#fff; height:220px; overflow:auto; padding:8px; margin-bottom:8px;"></div>
         <div style="display:flex; gap:8px;">
             <input type="text" id="chatInput" placeholder="메시지를 입력하세요" style="flex:1; padding:8px;" />
             <button id="chatSend" style="padding:8px 12px;">Send</button>
         </div>
-        <div style="margin-top:8px; font-size:12px; color:#666;">Note: 프론트엔드는 로컬 프록시 <code>/telnyx/assistant</code>로 요청합니다. 서버에서 Telnyx API 키를 안전하게 관리하세요.</div>
+        <div style="margin-top:8px; font-size:12px; color:#666;">Note: 프론트엔드에서 Telnyx API를 직접 호출합니다. 상단에 API Key를 입력하세요.</div>
     </div>
 
     <telnyx-ai-agent agent-id="assistant-ed38e212-87dd-4ef0-a8a5-3177b143298e"></telnyx-ai-agent>
     <script async="" src="https://unpkg.com/@telnyx/ai-agent-widget@next"></script>
 
     <script>
+        // Telnyx API Configuration
+        const ASSISTANT_ID = 'assistant-ed38e212-87dd-4ef0-a8a5-3177b143298e';
+
+        function getApiKey() {
+            return document.getElementById('telnyxApiKeyInput').value || localStorage.getItem('telnyx_api_key');
+        }
+
+        function generateRandomName() {
+            const randomDigits = Math.floor(10000000 + Math.random() * 90000000);
+            return `radevtest_anonumous_${randomDigits}`;
+        }
+
         // Chat UI helpers
         function appendChatMessage(role, text) {
             const container = document.getElementById('chatMessages');
@@ -696,16 +717,45 @@
         document.addEventListener('DOMContentLoaded', function () {
             const sendBtn = document.getElementById('chatSend');
             const newChatBtn = document.getElementById('newChat');
+            const saveKeyBtn = document.getElementById('saveApiKey');
+            const apiKeyInput = document.getElementById('telnyxApiKeyInput');
             const input = document.getElementById('chatInput');
 
+            // Load saved key
+            const savedKey = localStorage.getItem('telnyx_api_key');
+            if (savedKey) apiKeyInput.value = savedKey;
+
+            saveKeyBtn.addEventListener('click', () => {
+                localStorage.setItem('telnyx_api_key', apiKeyInput.value);
+                alert('API Key saved to LocalStorage');
+            });
+
             async function createConversation() {
+                const apiKey = getApiKey();
+                if (!apiKey) {
+                    appendChatMessage('ai', 'Error: API Key가 설정되지 않았습니다.');
+                    return;
+                }
+
                 try {
-                    const resp = await fetch('/telnyx/conversations', { method: 'POST' });
-                    const data = await resp.json();
-                    if (data.id) {
+                    const conversationName = generateRandomName();
+                    const resp = await fetch('https://api.telnyx.com/v2/ai/conversations', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({ name: conversationName })
+                    });
+                    const result = await resp.json();
+                    const data = result.data;
+                    
+                    if (data && data.id) {
                         localStorage.setItem('telnyx_conversation_id', data.id);
-                        appendChatMessage('ai', 'New conversation started: ' + data.id);
+                        appendChatMessage('ai', 'New conversation started: ' + data.id + ' (' + conversationName + ')');
                         return data.id;
+                    } else {
+                        throw new Error(result.errors ? result.errors[0].detail : 'Unknown error');
                     }
                 } catch (e) {
                     appendChatMessage('ai', 'Failed to create conversation: ' + e.message);
@@ -713,6 +763,12 @@
             }
 
             async function sendMessage() {
+                const apiKey = getApiKey();
+                if (!apiKey) {
+                    alert('API Key를 먼저 입력해주세요.');
+                    return;
+                }
+
                 const text = input.value && input.value.trim();
                 if (!text) return;
 
@@ -728,24 +784,28 @@
                 input.value = '';
 
                 try {
-                    const resp = await fetch('/telnyx/assistant', {
+                    const resp = await fetch(`https://api.telnyx.com/v2/ai/assistants/${ASSISTANT_ID}/chat`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
                         body: JSON.stringify({ 
                             conversation_id: convId, 
-                            text: text,
-                            assistant_id: 'assistant-ed38e212-87dd-4ef0-a8a5-3177b143298e' // Example ID
+                            content: text 
                         })
                     });
                     if (!resp.ok) {
                         const err = await resp.text();
                         appendChatMessage('ai', 'Error: ' + resp.status + ' ' + err);
                     } else {
-                        const j = await resp.json();
-                        // Expecting { content: '...' } based on SDK snippet
-                        if (j.content) appendChatMessage('ai', j.content);
-                        else if (j.reply) appendChatMessage('ai', j.reply);
-                        else appendChatMessage('ai', JSON.stringify(j));
+                        const result = await resp.json();
+                        const data = result.data;
+                        if (data && data.content) {
+                            appendChatMessage('ai', data.content);
+                        } else {
+                            appendChatMessage('ai', JSON.stringify(result));
+                        }
                     }
                 } catch (e) {
                     appendChatMessage('ai', 'Request failed: ' + e.message);
