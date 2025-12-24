@@ -660,7 +660,87 @@
 
     <button id="btnLogClear">logClear</button>
     </div>
+
+    <!-- Simple AI Chat UI -->
+    <div id="aiChat" style="border:1px solid #d0d0d0; padding:12px; margin-top:12px; max-width:720px; background:#fafafa;">
+        <h3 style="margin:0 0 8px 0;">AI Chat</h3>
+        <div id="chatMessages" style="border:1px solid #e0e0e0; background:#fff; height:220px; overflow:auto; padding:8px; margin-bottom:8px;"></div>
+        <div style="display:flex; gap:8px;">
+            <input type="text" id="chatInput" placeholder="메시지를 입력하세요" style="flex:1; padding:8px;" />
+            <button id="chatSend" style="padding:8px 12px;">Send</button>
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:#666;">Note: 프론트엔드는 로컬 프록시 <code>/telnyx/assistant</code>로 요청합니다. 서버에서 Telnyx API 키를 안전하게 관리하세요.</div>
+    </div>
+
     <telnyx-ai-agent agent-id="assistant-ed38e212-87dd-4ef0-a8a5-3177b143298e"></telnyx-ai-agent>
     <script async="" src="https://unpkg.com/@telnyx/ai-agent-widget@next"></script>
+
+    <script>
+        // Chat UI helpers
+        function appendChatMessage(role, text) {
+            const container = document.getElementById('chatMessages');
+            const el = document.createElement('div');
+            el.style.marginBottom = '8px';
+            el.innerHTML = '<strong>' + (role === 'user' ? 'You' : 'AI') + ':</strong> ' + (text || '');
+            container.appendChild(el);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function makeSessionId() {
+            let sid = localStorage.getItem('ai_chat_session_id');
+            if (!sid) {
+                sid = 'sess-' + Date.now() + '-' + Math.floor(Math.random()*10000);
+                localStorage.setItem('ai_chat_session_id', sid);
+            }
+            return sid;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const sendBtn = document.getElementById('chatSend');
+            const input = document.getElementById('chatInput');
+            const sessionId = makeSessionId();
+
+            async function sendMessage() {
+                const text = input.value && input.value.trim();
+                if (!text) return;
+                input.disabled = true;
+                sendBtn.disabled = true;
+                appendChatMessage('user', text);
+                input.value = '';
+
+                try {
+                    const resp = await fetch('/telnyx/assistant', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sessionId: sessionId, text: text })
+                    });
+                    if (!resp.ok) {
+                        const err = await resp.text();
+                        appendChatMessage('ai', 'Error: ' + resp.status + ' ' + err);
+                    } else {
+                        const j = await resp.json();
+                        // Expecting { reply: '...' } or { replies: [...] }
+                        if (j.reply) appendChatMessage('ai', j.reply);
+                        else if (j.replies && Array.isArray(j.replies)) j.replies.forEach(r=>appendChatMessage('ai', r));
+                        else appendChatMessage('ai', JSON.stringify(j));
+                    }
+                } catch (e) {
+                    appendChatMessage('ai', 'Request failed: ' + e.message);
+                } finally {
+                    input.disabled = false;
+                    sendBtn.disabled = false;
+                    input.focus();
+                }
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
