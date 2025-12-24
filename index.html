@@ -664,7 +664,7 @@
     <!-- Simple AI Chat UI -->
     <div id="aiChat" style="border:1px solid #d0d0d0; padding:12px; margin-top:12px; max-width:720px; background:#fafafa;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <h3 style="margin:0;">AI Chat-v0.0.2</h3>
+            <h3 style="margin:0;">AI Chat-v0.0.1</h3>
             <button id="newChat" style="font-size:12px; padding:4px 8px;">New Chat</button>
         </div>
         
@@ -705,7 +705,30 @@
             const container = document.getElementById('chatMessages');
             const el = document.createElement('div');
             el.style.marginBottom = '8px';
-            el.innerHTML = '<strong>' + (role === 'user' ? 'You' : 'AI') + ':</strong> ' + (text || '');
+            try {
+                if (role === 'ai') {
+                    let content = '';
+                    if (typeof text === 'string') {
+                        try {
+                            const parsed = JSON.parse(text);
+                            content = parsed && parsed.content ? parsed.content : text;
+                        } catch (e) {
+                            content = text;
+                        }
+                    } else if (typeof text === 'object' && text !== null) {
+                        content = text.content || JSON.stringify(text);
+                    } else {
+                        content = String(text);
+                    }
+                    content = content.replace(/<[^>]*>/g, '');
+                    el.textContent = 'AI: ' + content;
+                } else {
+                    const safeText = (typeof text === 'string') ? text.replace(/<[^>]*>/g, '') : String(text);
+                    el.innerHTML = '<strong>You:</strong> ' + safeText;
+                }
+            } catch (e) {
+                el.textContent = (role === 'ai' ? 'AI: ' : 'You: ') + String(text);
+            }
             container.appendChild(el);
             container.scrollTop = container.scrollHeight;
         }
