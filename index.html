@@ -663,7 +663,10 @@
 
     <!-- Simple AI Chat UI -->
     <div id="aiChat" style="border:1px solid #d0d0d0; padding:12px; margin-top:12px; max-width:720px; background:#fafafa;">
-        <h3 style="margin:0 0 8px 0;">AI Chat</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="margin:0;">AI Chat</h3>
+            <button id="newChat" style="font-size:12px; padding:4px 8px;">New Chat</button>
+        </div>
         <div id="chatMessages" style="border:1px solid #e0e0e0; background:#fff; height:220px; overflow:auto; padding:8px; margin-bottom:8px;"></div>
         <div style="display:flex; gap:8px;">
             <input type="text" id="chatInput" placeholder="메시지를 입력하세요" style="flex:1; padding:8px;" />
@@ -686,23 +689,39 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        function makeSessionId() {
-            let sid = localStorage.getItem('ai_chat_session_id');
-            if (!sid) {
-                sid = 'sess-' + Date.now() + '-' + Math.floor(Math.random()*10000);
-                localStorage.setItem('ai_chat_session_id', sid);
-            }
-            return sid;
+        function getConversationId() {
+            return localStorage.getItem('telnyx_conversation_id');
         }
 
         document.addEventListener('DOMContentLoaded', function () {
             const sendBtn = document.getElementById('chatSend');
+            const newChatBtn = document.getElementById('newChat');
             const input = document.getElementById('chatInput');
-            const sessionId = makeSessionId();
+
+            async function createConversation() {
+                try {
+                    const resp = await fetch('/telnyx/conversations', { method: 'POST' });
+                    const data = await resp.json();
+                    if (data.id) {
+                        localStorage.setItem('telnyx_conversation_id', data.id);
+                        appendChatMessage('ai', 'New conversation started: ' + data.id);
+                        return data.id;
+                    }
+                } catch (e) {
+                    appendChatMessage('ai', 'Failed to create conversation: ' + e.message);
+                }
+            }
 
             async function sendMessage() {
                 const text = input.value && input.value.trim();
                 if (!text) return;
+
+                let convId = getConversationId();
+                if (!convId) {
+                    convId = await createConversation();
+                }
+                if (!convId) return;
+
                 input.disabled = true;
                 sendBtn.disabled = true;
                 appendChatMessage('user', text);
@@ -712,16 +731,20 @@
                     const resp = await fetch('/telnyx/assistant', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ sessionId: sessionId, text: text })
+                        body: JSON.stringify({ 
+                            conversation_id: convId, 
+                            text: text,
+                            assistant_id: 'assistant-ed38e212-87dd-4ef0-a8a5-3177b143298e' // Example ID
+                        })
                     });
                     if (!resp.ok) {
                         const err = await resp.text();
                         appendChatMessage('ai', 'Error: ' + resp.status + ' ' + err);
                     } else {
                         const j = await resp.json();
-                        // Expecting { reply: '...' } or { replies: [...] }
-                        if (j.reply) appendChatMessage('ai', j.reply);
-                        else if (j.replies && Array.isArray(j.replies)) j.replies.forEach(r=>appendChatMessage('ai', r));
+                        // Expecting { content: '...' } based on SDK snippet
+                        if (j.content) appendChatMessage('ai', j.content);
+                        else if (j.reply) appendChatMessage('ai', j.reply);
                         else appendChatMessage('ai', JSON.stringify(j));
                     }
                 } catch (e) {
@@ -734,6 +757,11 @@
             }
 
             sendBtn.addEventListener('click', sendMessage);
+            newChatBtn.addEventListener('click', () => {
+                localStorage.removeItem('telnyx_conversation_id');
+                document.getElementById('chatMessages').innerHTML = '';
+                createConversation();
+            });
             input.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
